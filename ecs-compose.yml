@@ -6,9 +6,7 @@ services:
     command: ./uwsgi.sh
     environment:
       AWS_REGION: us-west-2
-      AWS_XRAY_DAEMON_ADDRESS: 'aws-xray-daemon:2000'
-    links:
-      - aws-xray-daemon
+      AWS_XRAY_DAEMON_ADDRESS: '127.0.0.1:2000'
     logging:
       driver: awslogs
       options:
@@ -16,12 +14,15 @@ services:
         awslogs-region: us-west-2
         awslogs-stream-prefix: wallet_app
   wallet_nginx:
-    image: '636729331386.dkr.ecr.us-west-2.amazonaws.com/msa_wallet_nginx:latest'
+    image: '636729331386.dkr.ecr.us-west-2.amazonaws.com/msa_nginx:latest'
     mem_limit: 64000000
-    links:
-      - wallet_app
+    environment:
+      SERVER_NAME: 'localhost'
     ports:
       - '0:80'
+    command: >
+      /bin/sh -c "envsubst '$$SERVER_NAME'  < /etc/nginx/nginx.conf.template
+      >        /etc/nginx/nginx.conf  && nginx -g 'daemon off;'"
     logging:
       driver: awslogs
       options:
